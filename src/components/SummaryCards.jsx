@@ -13,7 +13,7 @@ const SummaryCards = ({ totalIncome, totalExpense, balance, isFiltered }) => {
             {isFiltered ? 'Filtered Income' : 'Income'}
           </h3>
         </div>
-        <p className="text-lg sm:text-xl font-bold">₹ {totalIncome.toFixed(2)}</p>
+        <p className="text-lg sm:text-xl font-bold">₹{totalIncome.toFixed(2)}</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-3 text-center relative">
@@ -26,7 +26,7 @@ const SummaryCards = ({ totalIncome, totalExpense, balance, isFiltered }) => {
             {isFiltered ? 'Filtered Expenses' : 'Expenses'}
           </h3>
         </div>
-        <p className="text-lg sm:text-xl font-bold">₹ {totalExpense.toFixed(2)}</p>
+        <p className="text-lg sm:text-xl font-bold">₹{totalExpense.toFixed(2)}</p>
       </div>
 
       <div className={`rounded-xl shadow-md p-3 text-center relative ${balance >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -36,7 +36,7 @@ const SummaryCards = ({ totalIncome, totalExpense, balance, isFiltered }) => {
         <h3 className="font-semibold text-xs sm:text-sm mb-1">
           {isFiltered ? 'Filtered Balance' : 'Balance'}
         </h3>
-        <p className="text-lg sm:text-xl font-bold">₹ {balance.toFixed(2)}</p>
+        <p className="text-lg sm:text-xl font-bold">₹{balance.toFixed(2)}</p>
       </div>
     </div>
   );

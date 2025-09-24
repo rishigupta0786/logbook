@@ -7,20 +7,20 @@ import TransactionList from '@/components/TransactionList';
 import AddButton from '@/components/AddButton';
 import AddDialog from '@/components/AddDialog';
 import { loadLogs, saveLogs } from '@/utils/storage';
-import { Search, X } from 'lucide-react';
+import { Search, X, Filter } from 'lucide-react';
 
 export default function LogBookApp() {
   const [logs, setLogs] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all'); // 'all', 'income', 'expense'
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [persons, setPersons] = useState([]);
 
-  // Load logs from localStorage on component mount
+  // Load logs and persons from localStorage on component mount
   useEffect(() => {
     setLogs(loadLogs());
     
-    // Load persons
     const savedPersons = localStorage.getItem('logbookPersons');
     if (savedPersons) {
       setPersons(JSON.parse(savedPersons));
@@ -32,18 +32,25 @@ export default function LogBookApp() {
     saveLogs(logs);
   }, [logs]);
 
-  // Filter logs based on search term
+  // Filter logs based on search term and filter type
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredLogs(logs);
-    } else {
-      const filtered = logs.filter(log => {
+    let filtered = logs;
+    
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(log => log.type === filterType);
+    }
+    
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(log => {
         const personName = getPersonName(log.person).toLowerCase();
         return personName.includes(searchTerm.toLowerCase());
       });
-      setFilteredLogs(filtered);
     }
-  }, [searchTerm, logs, persons]);
+    
+    setFilteredLogs(filtered);
+  }, [searchTerm, filterType, logs, persons]);
 
   const getPersonName = (personId) => {
     const person = persons.find(p => p.id === personId);
@@ -67,6 +74,11 @@ export default function LogBookApp() {
     setIsDialogOpen(false);
   };
 
+  const handlePersonDelete = (updatedLogs, updatedPersons) => {
+    setLogs(updatedLogs);
+    setPersons(updatedPersons);
+  };
+
   const deleteLog = (id) => {
     setLogs(logs.filter(log => log.id !== id));
   };
@@ -81,6 +93,11 @@ export default function LogBookApp() {
     setSearchTerm('');
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterType('all');
+  };
+
   const totalIncome = logs
     .filter(log => log.type === 'income')
     .reduce((sum, log) => sum + log.amount, 0);
@@ -91,7 +108,6 @@ export default function LogBookApp() {
 
   const balance = totalIncome - totalExpense;
 
-  // Calculate filtered totals for display
   const filteredIncome = filteredLogs
     .filter(log => log.type === 'income')
     .reduce((sum, log) => sum + log.amount, 0);
@@ -102,14 +118,17 @@ export default function LogBookApp() {
 
   const filteredBalance = filteredIncome - filteredExpense;
 
+  const isFiltered = searchTerm || filterType !== 'all';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto">
         <Header />
         
-        {/* Search Bar - Above Summary Cards */}
+        {/* Search and Filter Bar */}
         <div className="bg-white rounded-xl shadow-md p-4 mb-4">
-          <div className="relative">
+          {/* Search Bar */}
+          <div className="relative mb-3">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search size={20} className="text-gray-400" />
             </div>
@@ -130,35 +149,68 @@ export default function LogBookApp() {
             )}
           </div>
           
-          {/* Search Results Info */}
-          {searchTerm && (
+  <div className="bg-gray-100 p-1 rounded-lg inline-flex mb-3">
+  <button
+    onClick={() => setFilterType('all')}
+    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+      filterType === 'all' 
+        ? 'bg-white text-blue-600 shadow-sm' 
+        : 'text-gray-600 hover:text-gray-800'
+    }`}
+  >
+    All
+  </button>
+  <button
+    onClick={() => setFilterType('income')}
+    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+      filterType === 'income' 
+        ? 'bg-white text-green-600 shadow-sm' 
+        : 'text-gray-600 hover:text-gray-800'
+    }`}
+  >
+    Income
+  </button>
+  <button
+    onClick={() => setFilterType('expense')}
+    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+      filterType === 'expense' 
+        ? 'bg-white text-red-600 shadow-sm' 
+        : 'text-gray-600 hover:text-gray-800'
+    }`}
+  >
+    Expense
+  </button>
+</div>
+          {/* Search and Filter Results Info */}
+          {(searchTerm || filterType !== 'all') && (
             <div className="mt-3 text-sm text-gray-600 flex justify-between items-center">
               <span>
                 Showing {filteredLogs.length} of {logs.length} transactions
+                {searchTerm && ` for "${searchTerm}"`}
+                {filterType !== 'all' && ` (${filterType} only)`}
                 {filteredLogs.length === 0 && (
                   <span className="text-red-500"> - No matches found</span>
                 )}
               </span>
               <button
-                onClick={clearSearch}
+                onClick={clearFilters}
                 className="text-blue-600 hover:text-blue-800 text-xs font-medium"
               >
-                Clear search
+                Clear all
               </button>
             </div>
           )}
         </div>
         
-        {/* Summary Cards - Show filtered totals when searching */}
         <SummaryCards 
-          totalIncome={searchTerm ? filteredIncome : totalIncome} 
-          totalExpense={searchTerm ? filteredExpense : totalExpense} 
-          balance={searchTerm ? filteredBalance : balance} 
-          isFiltered={!!searchTerm}
+          totalIncome={isFiltered ? filteredIncome : totalIncome} 
+          totalExpense={isFiltered ? filteredExpense : totalExpense} 
+          balance={isFiltered ? filteredBalance : balance} 
+          isFiltered={isFiltered}
         />
         
         <TransactionList 
-          logs={searchTerm ? filteredLogs : logs} 
+          logs={isFiltered ? filteredLogs : logs} 
           deleteLog={deleteLog} 
           clearAllLogs={clearAllLogs} 
         />
@@ -168,7 +220,8 @@ export default function LogBookApp() {
         <AddDialog 
           isOpen={isDialogOpen} 
           onClose={() => setIsDialogOpen(false)} 
-          onAdd={addLog} 
+          onAdd={addLog}
+          onPersonDelete={handlePersonDelete}
         />
       </div>
     </div>
