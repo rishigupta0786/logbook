@@ -18,6 +18,27 @@ const TransactionList = ({ logs, deleteLog, clearAllLogs }) => {
     return person ? person.name : 'Unknown';
   };
 
+  // Format date to be more readable
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No date';
+    
+    try {
+      // Handle both YYYY-MM-DD format and existing formatted dates
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return dateString; // Return as-is if it's not a valid date
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return dateString; // Return as-is if formatting fails
+    }
+  };
+
   const handleClearAllClick = () => {
     setShowConfirmDialog(true);
   };
@@ -80,7 +101,7 @@ const TransactionList = ({ logs, deleteLog, clearAllLogs }) => {
                 
                 {/* Date */}
                 <p className="text-xs text-gray-500">
-                  {log.date}
+                  {formatDate(log.date)}
                 </p>
               </div>
               

@@ -1,42 +1,66 @@
-import { TrendingUp, TrendingDown, Filter } from 'lucide-react';
+import { TrendingUp, TrendingDown, Filter, Calendar } from 'lucide-react';
+import { useState } from 'react';
 
-const SummaryCards = ({ totalIncome, totalExpense, balance, isFiltered }) => {
+const SummaryCards = ({ totalIncome, totalExpense, balance, isFiltered, onDateFilter }) => {
+  const [selectedDate, setSelectedDate] = useState('');
+
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    
+    if (date) {
+      onDateFilter(date);
+    } else {
+      onDateFilter(null);
+    }
+  };
+
+  const clearDateFilter = () => {
+    setSelectedDate('');
+    onDateFilter(null);
+  };
+
+  const hasDateFilter = selectedDate !== '';
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-      <div className="bg-white rounded-xl shadow-md p-3 text-center relative">
-        {isFiltered && (
-          <Filter size={14} className="absolute top-2 right-2 text-blue-500" />
-        )}
-        <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
-          <TrendingUp size={18} />
-          <h3 className="font-semibold text-xs sm:text-sm">
-            {isFiltered ? 'Filtered Income' : 'Income'}
-          </h3>
+    <div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        <div className="bg-white rounded-xl shadow-md p-3 text-center relative">
+          {(isFiltered || hasDateFilter) && (
+            <Filter size={14} className="absolute top-2 right-2 text-blue-500" />
+          )}
+          <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
+            <TrendingUp size={18} />
+            <h3 className="font-semibold text-xs sm:text-sm">
+              {(isFiltered || hasDateFilter) ? 'Filtered Income' : 'Income'}
+            </h3>
+          </div>
+          <p className="text-lg sm:text-xl font-bold">₹{totalIncome.toFixed(2)}</p>
         </div>
-        <p className="text-lg sm:text-xl font-bold">₹{totalIncome.toFixed(2)}</p>
-      </div>
 
-      <div className="bg-white rounded-xl shadow-md p-3 text-center relative">
-        {isFiltered && (
-          <Filter size={14} className="absolute top-2 right-2 text-blue-500" />
-        )}
-        <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
-          <TrendingDown size={18} />
-          <h3 className="font-semibold text-xs sm:text-sm">
-            {isFiltered ? 'Filtered Expenses' : 'Expenses'}
-          </h3>
+        <div className="bg-white rounded-xl shadow-md p-3 text-center relative">
+          {(isFiltered || hasDateFilter) && (
+            <Filter size={14} className="absolute top-2 right-2 text-blue-500" />
+          )}
+          <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
+            <TrendingDown size={18} />
+            <h3 className="font-semibold text-xs sm:text-sm">
+              {(isFiltered || hasDateFilter) ? 'Filtered Expenses' : 'Expenses'}
+            </h3>
+          </div>
+          <p className="text-lg sm:text-xl font-bold">₹{totalExpense.toFixed(2)}</p>
         </div>
-        <p className="text-lg sm:text-xl font-bold">₹{totalExpense.toFixed(2)}</p>
-      </div>
 
-      <div className={`rounded-xl shadow-md p-3 text-center relative ${balance >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-        {isFiltered && (
-          <Filter size={14} className="absolute top-2 right-2 text-blue-500" />
-        )}
-        <h3 className="font-semibold text-xs sm:text-sm mb-1">
-          {isFiltered ? 'Filtered Balance' : 'Balance'}
-        </h3>
-        <p className="text-lg sm:text-xl font-bold">₹{balance.toFixed(2)}</p>
+        <div className={`rounded-xl shadow-md p-3 text-center relative ${balance >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {(isFiltered || hasDateFilter) && (
+            <Filter size={14} className="absolute top-2 right-2 text-blue-500" />
+          )}
+          <h3 className="font-semibold text-xs sm:text-sm mb-1">
+            {(isFiltered || hasDateFilter) ? 'Filtered Balance' : 'Balance'}
+          </h3>
+          <p className="text-lg sm:text-xl font-bold">₹{balance.toFixed(2)}</p>
+        </div>
       </div>
     </div>
   );
