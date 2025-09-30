@@ -231,7 +231,7 @@ export default function LogBookApp() {
             {/* Date Filter */}
             <div className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg">
               <label className="text-sm font-medium text-gray-600 whitespace-nowrap">
-                Date:
+                Filter by Date:
               </label>
               <input
                 type="date"

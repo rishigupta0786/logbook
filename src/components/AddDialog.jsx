@@ -1,9 +1,12 @@
+// components/AddDialog.jsx
+'use client';
 import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PersonDropdown from './PersonDropdown';
 import NewPersonInput from './NewPersonInput';
 import EditPersonDialog from './EditPersonDialog';
 import DeletePersonDialog from './DeletePersonDialog';
+import { usePersons } from '../utils/PersonsContext';
 
 const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
   const [description, setDescription] = useState('');
@@ -13,20 +16,16 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
   const [date, setDate] = useState('');
   const [showNewPersonInput, setShowNewPersonInput] = useState(false);
   const [newPersonName, setNewPersonName] = useState('');
-  const [persons, setPersons] = useState([]);
   const [personToDelete, setPersonToDelete] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingPerson, setEditingPerson] = useState(null);
   const [editPersonName, setEditPersonName] = useState('');
 
-  // Load persons from localStorage on component mount and set default date
+  // Use context for persons
+  const { persons, addPerson, updatePerson, deletePerson } = usePersons();
+
+  // Set default date to today
   useEffect(() => {
-    const savedPersons = localStorage.getItem('logbookPersons');
-    if (savedPersons) {
-      setPersons(JSON.parse(savedPersons));
-    }
-    
-    // Set default date to today
     const today = new Date().toISOString().split('T')[0];
     setDate(today);
   }, []);
@@ -39,7 +38,7 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
     }
   }, [isOpen]);
 
-  // Person management functions
+  // Simplified person management functions
   const addNewPerson = () => {
     if (!newPersonName.trim()) {
       alert('Please enter a person name');
@@ -51,9 +50,7 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
       name: newPersonName.trim()
     };
 
-    const updatedPersons = [...persons, newPerson];
-    setPersons(updatedPersons);
-    localStorage.setItem('logbookPersons', JSON.stringify(updatedPersons));
+    addPerson(newPerson); // Use context function
     setPerson(newPerson.id);
     setNewPersonName('');
     setShowNewPersonInput(false);
@@ -65,44 +62,25 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
       return false;
     }
 
-    try {
-      const savedPersons = localStorage.getItem('logbookPersons');
-      if (!savedPersons) return false;
-
-      const currentPersons = JSON.parse(savedPersons);
-      const updatedPersons = currentPersons.map(p => 
-        p.id === personId ? { ...p, name: newName.trim() } : p
-      );
-
-      setPersons(updatedPersons);
-      localStorage.setItem('logbookPersons', JSON.stringify(updatedPersons));
-      return true;
-    } catch (error) {
-      console.error('Error editing person:', error);
-      return false;
-    }
+    updatePerson(personId, newName.trim()); // Use context function
+    return true;
   };
 
   const deletePersonAndTransactions = (personId) => {
     try {
       const savedLogs = localStorage.getItem('logbookEntries');
-      const savedPersons = localStorage.getItem('logbookPersons');
       
-      if (!savedLogs || !savedPersons) return { success: false };
+      if (!savedLogs) return { success: false };
       
       const logs = JSON.parse(savedLogs);
-      const currentPersons = JSON.parse(savedPersons);
-      
-      const updatedPersons = currentPersons.filter(p => p.id !== personId);
       const updatedLogs = logs.filter(log => log.person !== personId);
       
       localStorage.setItem('logbookEntries', JSON.stringify(updatedLogs));
-      localStorage.setItem('logbookPersons', JSON.stringify(updatedPersons));
+      deletePerson(personId); // Use context function
       
       return { 
         success: true, 
-        updatedLogs, 
-        updatedPersons,
+        updatedLogs,
         deletedTransactionsCount: logs.length - updatedLogs.length
       };
     } catch (error) {
@@ -111,7 +89,7 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
     }
   };
 
-  // Event handlers for edit/delete
+  // Event handlers
   const handleEditPerson = (personId) => {
     const personToEdit = persons.find(p => p.id === personId);
     if (personToEdit) {
@@ -141,17 +119,12 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
   const confirmDeletePerson = () => {
     if (personToDelete) {
       const result = deletePersonAndTransactions(personToDelete.id);
-      if (result.success) {
-        const updatedPersons = persons.filter(p => p.id !== personToDelete.id);
-        setPersons(updatedPersons);
-        
-        if (onPersonDelete) {
-          onPersonDelete(result.updatedLogs, updatedPersons);
-        }
-        
-        if (person === personToDelete.id) {
-          setPerson('');
-        }
+      if (result.success && onPersonDelete) {
+        onPersonDelete(result.updatedLogs);
+      }
+      
+      if (person === personToDelete.id) {
+        setPerson('');
       }
     }
     setShowDeleteConfirm(false);
@@ -183,7 +156,7 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
     setAmount('');
     setType('expense');
     setPerson('');
-    setDate(new Date().toISOString().split('T')[0]); // Reset to today
+    setDate(new Date().toISOString().split('T')[0]);
     setShowNewPersonInput(false);
     setNewPersonName('');
   };

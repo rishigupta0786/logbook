@@ -1,17 +1,12 @@
+// components/TransactionList.jsx
+'use client';
 import { Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { usePersons } from '../utils/PersonsContext';
 
 const TransactionList = ({ logs, deleteLog, clearAllLogs }) => {
-  const [persons, setPersons] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-
-  // Load persons from localStorage
-  useEffect(() => {
-    const savedPersons = localStorage.getItem('logbookPersons');
-    if (savedPersons) {
-      setPersons(JSON.parse(savedPersons));
-    }
-  }, []);
+  const { persons } = usePersons(); // Get persons from context
 
   const getPersonName = (personId) => {
     const person = persons.find(p => p.id === personId);
@@ -76,7 +71,8 @@ const TransactionList = ({ logs, deleteLog, clearAllLogs }) => {
           </button>
         </div>
         
-        <div className="divide-y max-h-[50vh] overflow-y-auto">
+        {/* Remove max-h-[50vh] overflow-y-auto from this div */}
+        <div className="divide-y">
           {logs.map((log) => (
             <div key={log.id} className="p-3 flex justify-between items-start hover:bg-gray-50 transition-colors">
               <div className="flex-1 min-w-0">
