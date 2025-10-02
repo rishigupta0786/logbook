@@ -1,3 +1,6 @@
+import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+
 const EditPersonDialog = ({ 
   editingPerson, 
   editPersonName, 
@@ -5,29 +8,44 @@ const EditPersonDialog = ({
   onSave, 
   onCancel 
 }) => {
-  if (!editingPerson) return null;
+  const inputRef = useRef(null);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       onSave();
+    } else if (e.key === 'Escape') {
+      onCancel();
     }
   };
 
+  useEffect(() => {
+    if (editingPerson && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingPerson]);
+
+  if (!editingPerson) return null;
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4 z-60">
-      <div 
-        className="absolute inset-0 bg-gray-800/50 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-      
+    <div className="fixed inset-0 backdrop-blur-sm bg-gray-800/30 flex items-center justify-center p-4 z-60">
       <div className="relative bg-white rounded-xl shadow-lg w-full max-w-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Edit Person</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Edit Person</h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Close"
+          >
+            <X size={24} />
+          </button>
+        </div>
         
         <input
+          ref={inputRef}
           type="text"
           value={editPersonName}
           onChange={(e) => onEditPersonNameChange(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
           placeholder="Enter person name"
           autoFocus

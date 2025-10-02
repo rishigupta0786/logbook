@@ -30,11 +30,17 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
     setDate(today);
   }, []);
 
-  // Reset date when dialog opens
+  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       const today = new Date().toISOString().split('T')[0];
       setDate(today);
+      setDescription('');
+      setAmount('');
+      setType('expense');
+      setPerson('');
+      setShowNewPersonInput(false);
+      setNewPersonName('');
     }
   }, [isOpen]);
 
@@ -54,6 +60,12 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
     setPerson(newPerson.id);
     setNewPersonName('');
     setShowNewPersonInput(false);
+  };
+
+  const handleCancelNewPerson = () => {
+    setShowNewPersonInput(false);
+    setNewPersonName('');
+    setPerson('');
   };
 
   const editPerson = (personId, newName) => {
@@ -137,40 +149,41 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
       return;
     }
 
-    let finalPerson = person;
+    // If we're in new person mode but haven't added the person yet
     if (showNewPersonInput && newPersonName.trim()) {
       addNewPerson();
-      finalPerson = person;
+      // Continue with the submission - the person state will be updated
     }
 
     onAdd({
       description: description.trim(),
       amount: parseFloat(amount),
       type,
-      person: finalPerson,
+      person: person,
       date: date
     });
 
-    // Reset form
-    setDescription('');
-    setAmount('');
-    setType('expense');
-    setPerson('');
-    setDate(new Date().toISOString().split('T')[0]);
-    setShowNewPersonInput(false);
-    setNewPersonName('');
+    // Reset form and close dialog
+    onClose();
   };
 
-  const cancelNewPerson = () => {
-    setShowNewPersonInput(false);
-    setNewPersonName('');
-    setPerson('');
+  const handleKeyPress = (e) => {
+    if (e.key === 'Escape') {
+      if (showNewPersonInput) {
+        handleCancelNewPerson();
+      } else {
+        onClose();
+      }
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      onKeyDown={handleKeyPress}
+    >
       {/* Semi-transparent overlay */}
       <div 
         className="absolute inset-0 bg-gray-800/30 backdrop-blur-sm"
@@ -224,7 +237,8 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
                 newPersonName={newPersonName}
                 onNewPersonNameChange={setNewPersonName}
                 onAddNewPerson={addNewPerson}
-                onCancel={cancelNewPerson}
+                onCancel={handleCancelNewPerson}
+                isOpen={showNewPersonInput}
               />
             )}
           </div>
@@ -256,6 +270,8 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
               onChange={(e) => setAmount(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white/80"
               required
+              min="0"
+              step="0.01"
             />
           </div>
           
@@ -277,7 +293,8 @@ const AddDialog = ({ isOpen, onClose, onAdd, onPersonDelete }) => {
           
           <button
             onClick={handleSubmit}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!description.trim() || !amount || parseFloat(amount) <= 0 || !person || !date}
           >
             Add Entry
           </button>

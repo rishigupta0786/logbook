@@ -1,45 +1,78 @@
 import { Plus, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 const NewPersonInput = ({ 
   newPersonName, 
   onNewPersonNameChange, 
   onAddNewPerson, 
-  onCancel 
+  onCancel,
+  isOpen = false
 }) => {
+  const inputRef = useRef(null);
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       onAddNewPerson();
+    } else if (e.key === 'Escape') {
+      onCancel();
     }
   };
 
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
+    <div className="fixed inset-0 backdrop-blur-lg bg-gray-800/30 flex items-center justify-center p-4 z-50">
+      <div className="relative bg-white rounded-xl shadow-lg w-full max-w-sm p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Add New Person</h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Close"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        
         <input
+          ref={inputRef}
           type="text"
-          placeholder="Enter new person name"
           value={newPersonName}
           onChange={(e) => onNewPersonNameChange(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white/80"
+          onKeyDown={handleKeyPress}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
+          placeholder="Enter new person name"
           autoFocus
         />
-        <button
-          onClick={onAddNewPerson}
-          className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg flex items-center justify-center transition-colors"
-          title="Add person"
-        >
-          <Plus size={20} />
-        </button>
-        <button
-          onClick={onCancel}
-          className="bg-gray-500 hover:bg-gray-600 text-white p-3 rounded-lg flex items-center justify-center transition-colors"
-          title="Cancel"
-        >
-          <X size={20} />
-        </button>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
+          >
+            <X size={18} />
+            Cancel
+          </button>
+          <button
+            onClick={onAddNewPerson}
+            disabled={!newPersonName.trim()}
+            className="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+          >
+            <Plus size={18} />
+            Add
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-500 text-center mt-3">
+          Press Enter to add or Escape to cancel
+        </p>
       </div>
-      <p className="text-xs text-gray-500">Press Enter or click + to add</p>
     </div>
   );
 };
